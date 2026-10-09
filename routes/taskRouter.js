@@ -5,10 +5,10 @@ const validate = require('../middlewares/validate');
 
 const router = express.Router();
 
-router.post('/tasks', validate(createTaskSchema), createTask);
+router.post('/task', validate(createTaskSchema), createTask);
 router.get('/all-tasks', getAllTasks);
-router.get('/task/:id', getTaskById);
-router.put('/task/:id', updateTask);
-router.delete('/task/:id', deleteTask);
+router.get('/one-task/:id', getTaskById);
+router.put('/update-task/:id', updateTask);
+router.delete('/delete-task/:id', deleteTask);
 
 module.exports = router; 

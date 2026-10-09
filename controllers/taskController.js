@@ -30,21 +30,50 @@ exports.createTask = async(req, res) => {
     }
 };
 
-exports.getAllTasks = async(req, res) => {
-    try{
-        const tasks = await taskModel.find();
-        res.status(200).json({
-            success: true,
-            message: 'Tasks retrieved successfully',
-            data: tasks
-        });
-    } catch (error) {
-        res.status(500).json({
+exports.getAllTasks = async (req, res) => {
+try {
+const page = parseInt(req.query.page, 10) || 1;
+const limit = parseInt(req.query.limit, 10) || 10;
+
+    if (page < 1 || limit < 1 || limit > 100) {
+        return res.status(400).json({
             success: false,
-            message: error.message
+            message: 'Page must be at least 1, and limit must be between 1 and 100'
         });
     }
+
+    const skip = (page - 1) * limit;
+
+    const [tasks, totalTasks] = await Promise.all([
+        taskModel.find().sort({ createdAt: -1, _id: -1 }).skip(skip).limit(limit),
+        taskModel.countDocuments()
+    ]);
+
+    const totalPages = Math.ceil(totalTasks / limit);
+
+    return res.status(200).json({
+        success: true,
+        message: 'Tasks retrieved successfully',
+        pagination: {
+            totalTasks,
+            totalPages,
+            currentPage: page,
+            limit,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1
+        },
+        data: tasks
+    });
+} catch (error) {
+    return res.status(500).json({
+        success: false,
+        message: error.message
+    });
+}
+
+
 };
+
 
 exports.getTaskById = async(req, res) => {
     try{
@@ -69,12 +98,15 @@ exports.getTaskById = async(req, res) => {
     }
 };
 
+
 exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params;
+    const { title, description, status, dueDate } = req.body;
+
     const task = await taskModel.findByIdAndUpdate(
       id,
-      req.body,
+      { title, description, status, dueDate },
       {
         new: true,
         runValidators: true
@@ -93,7 +125,6 @@ exports.updateTask = async (req, res) => {
       message: "Task updated successfully",
       data: task
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,

@@ -12,11 +12,22 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 
-app.use('/api/v1', taskRouter);
+app.use('/api/v1/task', taskRouter);
 
-connectDB();
 const PORT = process.env.PORT || 3122;
 
-app.listen(PORT, ()=> {
-    console.log(`Server is running on port ${PORT}`);
-});
+const startServer = async () => {
+try {
+await connectDB();
+
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+} catch (error) {
+    console.error('Failed to start server:', error.message);
+    process.exit(1);
+}
+
+};
+
+startServer();
